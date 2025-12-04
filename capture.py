@@ -1,57 +1,46 @@
-import cv2, os, numpy as np
+import cv2
+import os
+import time
 
-# === CAPTURA ===
-nome = input("Nome: ")
-path = f"dataset/{nome}"
-os.makedirs(path, exist_ok=True)
+# Pergunta o nome ao utilizador
+person_name = input("Digite o nome da pessoa: ").strip()
 
+# Cria pasta dentro de dataset
+SAVE_FOLDER = os.path.join("dataset", person_name)
+os.makedirs(SAVE_FOLDER, exist_ok=True)
+
+# Inicializa webcam
 cap = cv2.VideoCapture(0)
-face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades+"haarcascade_frontalface_default.xml")
-count = 0
 
-while count < 30:
-    _, frame = cap.read()
-    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    faces = face_cascade.detectMultiScale(gray, 1.3, 5)
+total_images = 200  # pode alterar
+delay = 0.05        # pequeno atraso
 
-    for (x,y,w,h) in faces:
-        face = gray[y:y+h, x:x+w]
-        cv2.imwrite(f"{path}/{count}.jpg", face)
-        count += 1
-        cv2.rectangle(frame, (x,y),(x+w,y+h),(0,255,0),2)
+print(f"Iniciando captura para {person_name}...")
 
-    cv2.imshow("Captura", frame)
-    if cv2.waitKey(1)==ord('q'): break
+for i in range(1, total_images + 1):
+    ret, frame = cap.read()
+    if not ret:
+        print("Erro ao capturar imagem.")
+        continue
 
+    # Nome da imagem e caminho de destino
+    filename = f"{person_name}_{i}.jpg"
+    path = os.path.join(SAVE_FOLDER, filename)
+
+    # Salva a foto
+    cv2.imwrite(path, frame)
+    print(f"Imagem {i}/{total_images} salva em {SAVE_FOLDER}")
+
+    # Delay curto
+    time.sleep(delay)
+
+    # Previsualização em tempo real
+    cv2.imshow("Capturando imagens...", frame)
+
+    # Aperte 'q' para parar antes de terminar
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
+
+print("Captura concluída.")
 cap.release()
 cv2.destroyAllWindows()
-
-print("✔ Captura concluída!")
-
-# === TREINO ===
-faces, labels = [], []
-label_dict = {}  
-current_id = 0
-
-for pessoa in os.listdir("dataset"):
-    pasta = f"dataset/{pessoa}"
-    if not os.path.isdir(pasta): continue
-    
-    label_dict[current_id] = pessoa
-    
-    for img in os.listdir(pasta):
-        img_path = f"{pasta}/{img}"
-        face_img = cv2.imread(img_path, 0)
-        faces.append(face_img)
-        labels.append(current_id)
-    
-    current_id += 1
-
-faces = np.array(faces)
-labels = np.array(labels)
-
-recognizer = cv2.face.LBPHFaceRecognizer_create()
-recognizer.train(faces, labels)
-recognizer.save("modelo.yml")
-
-print("✔ Treino concluído! Modelo salvo em modelo.yml")
