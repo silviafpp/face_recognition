@@ -36,13 +36,12 @@ for person in os.listdir(DATASET_DIR):
         # Carrega a imagem em escala de cinza
         img = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
 
-        # 🛑 CORREÇÃO 1: Garante que a imagem foi carregada corretamente
         if img is None:
             print(f"ATENÇÃO: Pulando arquivo inválido/corrompido: {img_path}")
             continue
 
         try:
-            # 🛑 CORREÇÃO 2: Redimensiona a imagem para o tamanho padrão (100x100)
+
             img_resized = cv2.resize(img, STANDARD_SIZE)
         except cv2.error as e:
             # Captura erros de redimensionamento (se a imagem tiver dimensões inválidas)
@@ -77,6 +76,6 @@ model.save("model.yml")
 with open("labels.txt", "w") as f:
     f.write(str(label_map))
 
-print("✔ Treinamento concluído!")
+print(" Treinamento concluído!")
 print(f"Modelo salvo em 'model.yml' e rótulos em 'labels.txt'.")
 print("Pessoas reconhecidas:", label_map)
